@@ -81,7 +81,7 @@ def initialise()
     }
     else
     {
-        debugOff()
+        disableDebugLogging()
     }
     
     if(password)
@@ -94,9 +94,9 @@ def initialise()
         action ("setoption31%20On")
     }
     
-    // as the sonoff doesn't send parse information we need to ask for updates every minute
+    // The Sonoff doesn't send parse information, so we need to ask for updates every minute.
     // You can remove this if you do not need updates, ie if the device state is not changed
-    // outside of smartthings (by a switch, the Sonoff push button etc)
+    // outside of smartthings (by a switch, the Sonoff push button etc).
     if(!disabled)
     {
         runEvery1Minute(update)
@@ -128,7 +128,7 @@ def scheduled()
 
 def parse()
 {
-    // If future versions of Tasmota support parsing
+    // implement when/if future versions of Tasmota support parsing
     logDebug ("$device.displayName parse(); description: $description")
 }
 
@@ -285,17 +285,23 @@ void calledBackHandler(hubitat.device.HubResponse hubResponse)
     }
 }
 
-def enableDebugLogging(evt)
+def enableDebugLogging()
 {
     if(logDebugging)
     {
         state.logDebug = 1
-        logDebug ("Switching on debug logging")
+        logDebug ("enableDebugLogging()")
 	}
     if (debugDelay)
     {
-        runIn (1800, debugOff)
+        runIn (1800, disableDebugLogging)
     }
+}
+
+def disableDebugLogging()
+{
+    logDebug ("disableDebugLogging()")
+    state.logDebug = 0
 }
 
 def setFriendlyAndHostnameToDeviceName()
@@ -312,12 +318,6 @@ def logDebug(text)
     {
         log.debug "$device.displayName : $text"
     }
-}
-
-def debugOff()
-{
-    logDebug ("Switching off debug logging")
-    state.logDebug = 0
 }
 
 def logInfo(text)
