@@ -30,8 +30,7 @@ metadata {
         attribute "MAC", "string"
         attribute "IP", "string"
         attribute "Authentication", "string"   
-        
-        command "enableDebugLogging"
+
         command "setFriendlyAndHostnameToDeviceName"
     }
     
@@ -235,7 +234,7 @@ void calledBackHandler(hubitat.device.HubResponse hubResponse)
             logDebug("$device.displayName - disabled LED blink on WiFi error")
             break;
         default:
-            // expected: state.status.contains ('Status')
+            // TODO: expected: state.status.contains ('Status')
             def msg = new groovy.json.JsonSlurper().parseText(hubResponse.body)
             def SonoffPower = msg.Status.Power
             def SonoffFriendlyName = msg.Status.FriendlyName
