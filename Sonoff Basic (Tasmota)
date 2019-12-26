@@ -16,322 +16,315 @@
  *
  */
 metadata {
-	definition (name: "Sonoff Basic - Tasmota", namespace: "mhutchy", author: "Mark Hutchings") {
-		capability "Actuator"
-		capability "Momentary"
-		capability "Switch"
+    definition (name: "Sonoff Basic - Tasmota 2", namespace: "mhutchy", author: "Mark Hutchings")
+    {
+        capability "Actuator"
+        capability "Momentary"
+        capability "Switch"
         capability "Refresh"
         
         attribute "FriendlyName", "string"
         attribute "Uptime", "string"
         attribute "Version", "string"
         attribute "Hostname", "string"
-        attribute "Mac", "string"
-        attribute "ip", "string"
-        attribute "authentication", "string"
-                 
+        attribute "MAC", "string"
+        attribute "IP", "string"
+        attribute "Authentication", "string"   
         
         command "enableDebugLogging"
-		
-	}
-    
- 
- 
- 
-	preferences {
- 
-    	section ("Authentication, user is hardcoded as admin"){   
-     	input "password", "string", title: "Password (if used)", multiple: false, required: false
-         }
-
-		section ("Device preferences"){
-
-			
- 			input "setName", "bool", title: "Change Sonoff's hostName and friendly name to match Device Name", displayDuringSetup: true, required: false
-			input "forceIP", "string", title: "IP Address (optional)", description: "If left blank then device network iD will be used as IP", multiple: false, required: false
-        	input "stopBlink",  "bool", title: "Disable LED blink when Sonoff WiFi low", displayDuringSetup: true, required: false
-			input "disabled", "bool", title: "Disable driver", description: "If this is set, the driver will neither update switch statuses or send commands to the device (used to avoid errors if device is disconnected)", displayDuringSetup: true, required: false
-    	
-        
- 			input "logDebugging", "bool", title: "Enable debug logging", displayDuringSetup: true, required: true
-			input "debugDelay", "bool", title: "Disable debug logging after 30m", displayDuringSetup: true, required: true
-			input "infoLog", "bool", title: "Enable info logging", displayDuringSetup: true, required: true
-        
-      
-        	input "2R",  "bool", title: "2R", description: "If this Sonoff is a 2 output device then the option below should be enabled, this device handler will opperate the 1st relay, a 2R handler is need for the 2nd relay", displayDuringSetup: true, required: false
-
-		}
-	}
-
-
-}
-
-// parse events into attributes
-
-
-  //  Sonoff doesn't send any data so parse does not work
-
-
-
-// handle commands
-
-def updated(){
-	log.debug "Updated"
-	unschedule()
-	updateDetails()
-    initialise()
-	
-}
-
-
-def installed(){
-	log.debug "Installed"
-	unschedule()
-	updateDetails()
-    initialise()
-}
-
-
-
-def initialise(){
-	
-	if (logDebugging) {
-		enableDebugLogging()
-	}
-	else {
-		debugOff ()
-	}
-
-	logDebug ("initialising with $settings")
-
-   
-   if (setName) {
-   		def sonoffName = device.displayName.replaceAll(' ','_') 
-        logDebug ("$device.displayName - Sonoff name set to $sonoffName")
-   		action ("hostname%20$sonoffName")
-        action ("friendlyname%20$sonoffName")
-        }
-   
-   if (password){
-   		action ("WebPassword%20$password")
-        }
-   
-   if (stopBlink) {
-   	action ("setoption31%20On")
+        command "setFriendlyAndHostnameToDeviceName"
     }
     
-  // as the sonoff doesn't send parse information we need to ask for updates every minute
-  // You can remove this if you do not need updates, ie if the device state is not changed
-  // outside of smartthings (by a switch, the Sonoff push button etc)   
-	if (!disabled) {
-		runEvery1Minute(update)
-   		runEvery10Minutes(updateDetails)
-	}
-	else {
-		sendEvent(name: "switch", value: "off")
+    preferences 
+    {
+        section ("Authentication, user is hardcoded as admin")
+        { 
+            input "password", "string", title: "Password (if used)", multiple: false, required: false
+        }
+        
+        section ("Device preferences")
+        {
+            input "forceIP", "string", title: "IP Address (optional)", description: "If left blank then device network iD will be used as IP", multiple: false, required: false
+            input "stopBlink",  "bool", title: "Disable LED blink when Sonoff WiFi low", displayDuringSetup: true, required: false
+            input "disabled", "bool", title: "Disable driver", description: "If this is set, the driver will neither update switch statuses or send commands to the device (used to avoid errors if device is disconnected)", displayDuringSetup: true, required: false
+            
+            input "logDebugging", "bool", title: "Enable debug logging", displayDuringSetup: true, required: true
+            input "debugDelay", "bool", title: "Disable debug logging after 30m", displayDuringSetup: true, required: true
+            input "infoLog", "bool", title: "Enable info logging", displayDuringSetup: true, required: true
+            
+            input "2R",  "bool", title: "2R", description: "If this Sonoff is a 2 output device then the option below should be enabled, this device handler will opperate the 1st relay, a 2R handler is need for the 2nd relay", displayDuringSetup: true, required: false
+        }
+    }
+}
+
+def updated()
+{
+    logDebug("updated")
+    initialise()
+}
+
+def installed()
+{
+    logDebug("installed")
+    initialise()
+}
+
+def initialise()
+{
+    unschedule()
+    updateDetails()
+    
+    logDebug ("initialise() with $settings")
+    
+    if(logDebugging)
+    {
+        enableDebugLogging()
+    }
+    else
+    {
+        debugOff()
+    }
+    
+    if(password)
+    {
+        action ("WebPassword%20$password")
+    }
+    
+    if(stopBlink)
+    {
+        action ("setoption31%20On")
+    }
+    
+    // as the sonoff doesn't send parse information we need to ask for updates every minute
+    // You can remove this if you do not need updates, ie if the device state is not changed
+    // outside of smartthings (by a switch, the Sonoff push button etc)
+    if(!disabled)
+    {
+        runEvery1Minute(update)
+        runEvery10Minutes(updateDetails)
+    }
+    else
+    {
+        sendEvent(name: "switch", value: "off")
         unschedule()
-	}
-		
-   
-}	
-    
+    }
+}
 
-def updateDetails(){
-	logDebug ("detailed update")
+def updateDetails()
+{
+    logDebug("updateDetails()")
     action("status%200")
-    
-    
-    }
+}
 
-def update(){
-	logDebug ("refreshing status")
-   action("power1")
-    
-    }
+def update()
+{
+    logDebug ("update()")
+    action("power1")
+}
 
-def scheduled (){
-	logDebug ("scheduled handler")
-    }
+def scheduled()
+{
+    logDebug("scheduled()")
+}
 
-def parse(){
-// If future versions of Tasmota support parsing
-	logDebug ("$device.displayName Parsing")
-    logDebug ("description: $description")
-    }
+def parse()
+{
+    // If future versions of Tasmota support parsing
+    logDebug ("$device.displayName parse(); description: $description")
+}
 
-def push() {
-	logDebug ("push command received, status: switch - ${device.currentValue("switch")}, Momentary - ${device.currentValue("momentary")}")
-    if (!disabled){
+def push()
+{
+    logDebug ("push command received, status: switch - ${device.currentValue("switch")}, Momentary - ${device.currentValue("momentary")}")
+    if(!disabled)
+    {
         action("Power1%20Toggle")
         runIn (5, update)
-    }
-    else {
-        logDebug ("device disabled")
     }
 }
                   
 
-def on() {
-	logDebug ("on command received, status: switch - ${device.currentValue("switch")}, Momentary - ${device.currentValue("momentary")}")
-    if (!disabled){
-	    action ("Power1%20On")
+def on()
+{
+    logDebug ("on command received, status: switch - ${device.currentValue("switch")}, Momentary - ${device.currentValue("momentary")}")
+    if(!disabled)
+    {
+        action ("Power1%20On")
         runIn (5, update)
-    }
-    else {
-        logDebug ("device disabled")
     }
 }
 
-def off() {
-	logDebug ("off command received, status: switch - ${device.currentValue("switch")}, Momentary - ${device.currentValue("momentary")}")
-    if (!disabled){
-	    action("Power1%20Off")
+def off()
+{
+    logDebug ("off command received, status: switch - ${device.currentValue("switch")}, Momentary - ${device.currentValue("momentary")}")
+    if(!disabled)
+    {
+        action("Power1%20Off")
         runIn (5, update)
-    }
-    else {
-        logDebug ("device disabled")
     }
 }
 
-def refresh() {
+def refresh()
+{
     logDebug ("refresh command received - status: switch - ${device.currentValue("switch")}, Momentary - ${device.currentValue("momentary")}")
-    if (!disabled){
-	    update()
-    }
-    else {
-        logDebug ("device disabled")
+    if (!disabled)
+    {
+        update()
     }
 }
 
-
-//action - Sends command to Sonoff
-
-def action(option){
-	def deviceIP = device.deviceNetworkId
-	if (forceIP) {
-		deviceIP = forceIP
-	}
-    //add password if not blank
-    if (password){
-			option += "&user=admin&password=${password}"
-		}
-    logDebug ("Sending command : '${option}' to $device.displayName at IP:${deviceIP}")
-    def theAction = new hubitat.device.HubAction("""GET /cm?cmnd=${option} HTTP/1.1\r\n Accept: */*\r\nHOST: ${deviceIP}:80\r\n\r\n""", hubitat.device.Protocol.LAN, "${deviceIP}:80", [callback: calledBackHandler])
-
-    sendHubCommand(theAction)
+//action() - Sends command to Sonoff
+def action(option)
+{
+    def deviceIP = device.deviceNetworkId
+    if (null != forceIP)
+    {
+        deviceIP = forceIP
+    }
     
-
+    // log this here, just so password is not logged
+    logDebug ("Sending command : '${option}' to $device.displayName at IP:${deviceIP}")
+    
+    //add password if not blank
+    if (password)
+    {
+        option += "&user=admin&password=${password}"
+    }
+    
+    def theAction = new hubitat.device.HubAction("""GET /cm?cmnd=${option} HTTP/1.1\r\n Accept: */*\r\nHOST: ${deviceIP}:80\r\n\r\n""", hubitat.device.Protocol.LAN, "${deviceIP}:80", [callback: calledBackHandler])
+    sendHubCommand(theAction)
 }
 
 void calledBackHandler(hubitat.device.HubResponse hubResponse)
 {
-  //treating data received back from sonoff
-  //when power command used a one line power on or power off is reveived
-  //when status is used then a list of data is receievd, all we are interseted in is the power information
-  //If you want to add more status information then details can be found at https://github.com/arendst/Sonoff-Tasmota/wiki/Commands
-  
-state.status = hubResponse.body 
-logDebug ("responded with '$state.status'")
-def reportedState
-
-      
-      if (state.status == """{"WARNING":"Need user=<username>&password=<password>")""") {
-      		log.error "$device.displayName  password failure"
-            sendEvent(name: "authentication", value: 'FAILED')
-            }
-      else {sendEvent(name: "authentication", value: 'ok')
-      }
-   
+    //treating data received back from sonoff
+    //when power command used a one line power on or power off is reveived
+    //when status is used then a list of data is receievd, all we are interested in is the power information
+    //If you want to add more status information then details can be found at https://github.com/arendst/Sonoff-Tasmota/wiki/Commands
     
-   	if (state.status == """{"POWER":"ON"}""") {
-        reportedState = "on"}
-   else
-      if (state.status == """{"POWER1":"ON"}""") {
-        reportedState = "on"}
-   else 
-   if (state.status == """{"POWER":"OFF"}""") {
-     reportedState = "off"}
-        else 
-   if (state.status == """{"POWER1":"OFF"}""") {
-     reportedState = "off"}
-   else
-   if (state.status == """{"SetOption31":"ON"}""") {
-     logDebug ("$device.displayName LED blink on WiFi error disabled")
-   }   
-   else
-   if (state.status.contains ('Status'))
-   
-   {
-   		def msg = new groovy.json.JsonSlurper().parseText(hubResponse.body)  
-   		def SonoffPower = msg.Status.Power
-        def SonoffFriendlyName = msg.Status.FriendlyName
-        def SonoffUptime = msg.StatusPRM.Uptime
-        def SonoffVersion = msg.StatusFWR.Version
-        def SonoffHostname = msg.StatusNET.Hostname
-        def SonoffIPAddress = msg.StatusNET.IPAddress
-        def SonoffMac = msg.StatusNET.Mac
-        def SonoffLocal = msg.StatusTIM.Local
-        def SonoffSleepMode = msg.StatusSTS.SleepMode
-        def SonoffSleep = msg.StatusSTS.Sleep
-                        
-           
-        sendEvent(name: "FriendlyName", value: "$SonoffFriendlyName")
-   		sendEvent(name: "Uptime", value: "$SonoffUptime")
-        sendEvent(name: "Version", value: "$SonoffVersion")
-        sendEvent(name: "Hostname", value: "$SonoffHostname")
-        sendEvent(name: "Mac", value: "$SonoffMac")
-        sendEvent(name: "ip", value: "$SonoffIPAddress")
+    state.status = hubResponse.body 
+    logDebug("responded with '$state.status'")
+    
+    def reportedState
+    
+    if (state.status == """{"WARNING":"Need user=<username>&password=<password>")""")
+    {
+        log.error "$device.displayName  password failure"
+        sendEvent(name: "authentication", value: 'FAILED')
+    }
+    else
+    {
+        sendEvent(name: "authentication", value: 'ok')
+    }
+    
+    switch(state.status)
+    {
+        case """{"POWER":"ON"}""":
+            reportedState = "on"
+            break;
+        case """{"POWER1":"ON"}""":
+            reportedState = "on"
+            break;
+        case """{"POWER":"OFF"}""":
+            reportedState = "off"
+            break;
+        case """{"POWER1":"OFF"}""":
+            reportedState = "off"
+            break;
+        case """{"SetOption31":"ON"}""":
+            logDebug("$device.displayName - disabled LED blink on WiFi error")
+            break;
+        default:
+            // expected: state.status.contains ('Status')
+            def msg = new groovy.json.JsonSlurper().parseText(hubResponse.body)
+            def SonoffPower = msg.Status.Power
+            def SonoffFriendlyName = msg.Status.FriendlyName
+            def SonoffUptime = msg.StatusPRM.Uptime
+            def SonoffVersion = msg.StatusFWR.Version
+            def SonoffHostname = msg.StatusNET.Hostname
+            def SonoffIPAddress = msg.StatusNET.IPAddress
+            def SonoffMac = msg.StatusNET.Mac
+            def SonoffLocal = msg.StatusTIM.Local
+            def SonoffSleepMode = msg.StatusSTS.SleepMode
+            def SonoffSleep = msg.StatusSTS.Sleep
+            
+            sendEvent(name: "FriendlyName", value: "$SonoffFriendlyName")
+            sendEvent(name: "Uptime", value: "$SonoffUptime")
+            sendEvent(name: "Version", value: "$SonoffVersion")
+            sendEvent(name: "Hostname", value: "$SonoffHostname")
+            sendEvent(name: "MAC", value: "$SonoffMac")
+            sendEvent(name: "IP", value: "$SonoffIPAddress")
         
-	   if (SonoffPower == 1) {reportedState = "on"}else {reportedState = "off"}
-            logDebug ("updated: FriendlyName:${SonoffFriendlyName} Uptime: ${SonoffUptime} Time: ${SonoffLocal} Version: ${SonoffVersion} HostName: ${SonoffHostname} MAC: ${SonoffMac} SleepMode: ${SonoffSleepMode}")
-        }
-   
-   def currentState = device.currentValue("switch")
-   if (reportedState != currentState){
-	   	logDebug ("currentState = $currentState sending Event $reportedState")
-	   	
-   		sendEvent(name: "switch", value: reportedState)
-	   logInfo ("turned $reportedState")
+            if(SonoffPower == 1)
+            {
+                reportedState = "on"
+            }
+            else
+            {
+                reportedState = "off"
+            }
+        
+            logDebug("updated: FriendlyName:${SonoffFriendlyName} Uptime: ${SonoffUptime} Time: ${SonoffLocal} Version: ${SonoffVersion} HostName: ${SonoffHostname} MAC: ${SonoffMac} SleepMode: ${SonoffSleepMode}")
+        
+            break;
+    }
+    
+    def currentState = device.currentValue("switch")
+    if (reportedState != currentState)
+    {
+        logDebug ("currentState = $currentState sending Event $reportedState")
+        sendEvent(name: "switch", value: reportedState)
+        logInfo ("turned $reportedState")
+    }
+    
+    def SwitchState = device.currentValue("switch")
+    
+    //if switch state has changed then output to logger
+    if ((SwitchState != currentState) && (SwitchState))
+    {
+        logInfo ("turned $SwitchState")
+    }
+}
+
+def enableDebugLogging(evt)
+{
+    if(logDebugging)
+    {
+        state.logDebug = 1
+        logDebug ("Switching on debug logging")
 	}
-     
-  // sendEvent(name: "refresh", value: "active")
-   
-   
-   
-   def SwitchState = device.currentValue("switch")
-   
-   //if switch state has changed then output to logger
-   if ((SwitchState != currentState) && (SwitchState)) {
-	   logInfo ("turned $SwitchState")
-   }
+    if (debugDelay)
+    {
+        runIn (1800, debugOff)
+    }
 }
 
-def enableDebugLogging (evt) {
-	if (logDebugging){
-		state.logDebug = 1
-		logDebug ("Switching on debug logging")
-	}
-	if (debugDelay) {
-		runIn (1800, debugOff)
-	}
+def setFriendlyAndHostnameToDeviceName()
+{
+    def sonoffName = device.displayName.replaceAll(' ','_') 
+    logDebug ("$device.displayName - Sonoff name set to $sonoffName")
+    action ("hostname%20$sonoffName")
+    action ("friendlyname%20$sonoffName")
+}   
+
+def logDebug(text)
+{
+    if(state.logDebug)
+    {
+        log.debug "$device.displayName : $text"
+    }
 }
 
-def logDebug (text) {
-	if (state.logDebug){
-		log.debug "$device.displayName : $text"
-	}
+def debugOff()
+{
+    logDebug ("Switching off debug logging")
+    state.logDebug = 0
 }
 
-def debugOff () {
-	logDebug ("Switching off debug logging")
-	state.logDebug = 0
+def logInfo(text)
+{
+    if (infoLog)
+    {
+        log.info "$device.displayName : $text"
+    }
 }
-
-def logInfo (text) {
-	if (infoLog){
-    	log.info "$device.displayName : $text"
-        }
-}
-
-//all status information can be found here https://github.com/arendst/Sonoff-Tasmota/wiki/Commands
-
