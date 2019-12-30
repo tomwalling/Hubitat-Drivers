@@ -221,7 +221,7 @@ void calledBackHandler(hubitat.device.HubResponse hubResponse)
     
     def responseBody = hubResponse.body
     state.status = responseBody
-    logDebug("responded with '$responseBody'")
+    logDebug("hubResponse was '$responseBody'")
     
     def reportedState
     def reportedLevel
@@ -235,6 +235,8 @@ void calledBackHandler(hubitat.device.HubResponse hubResponse)
     {
         sendEvent(name: "authentication", value: 'ok')
     }
+    
+    def msg = new groovy.json.JsonSlurper().parseText(hubResponse.body)
     
     switch(responseBody)
     {
@@ -257,9 +259,10 @@ void calledBackHandler(hubitat.device.HubResponse hubResponse)
             break;
     }
     
-    if(responseBody.contains('Status'))
+    if(msg.Status)
     {
-        def msg = new groovy.json.JsonSlurper().parseText(hubResponse.body)
+        logDebug("msg.Status = ${msg.Status}")
+        
         def SonoffPower = msg.Status.Power
         def SonoffFriendlyName = msg.Status.FriendlyName
         def SonoffUptime = msg.StatusPRM.Uptime
@@ -291,11 +294,10 @@ void calledBackHandler(hubitat.device.HubResponse hubResponse)
         logDebug("updated: FriendlyName:${SonoffFriendlyName} Uptime: ${SonoffUptime} Time: ${SonoffLocal} Version: ${SonoffVersion} HostName: ${SonoffHostname} MAC: ${SonoffMac} SleepMode: ${SonoffSleepMode}")
     }
     
-    if(responseBody.contains('Dimmer'))
+    if(msg.Dimmer)
     {
-        def msg = new groovy.json.JsonSlurper().parseText(hubResponse.body)
-        reportedLevel = msg.Dimmer
         logDebug("msg.Dimmer = ${msg.Dimmer}")
+        reportedLevel = msg.Dimmer
     }
     
     if(null != reportedState)
@@ -312,7 +314,14 @@ void calledBackHandler(hubitat.device.HubResponse hubResponse)
     
     if(null != reportedLevel)
     {
-        sendEvent(name: "level", value: reportedLevel)
+        def currentLevel = device.currentValue("level")
+        logInfo("previous level: ${currentLevel}")
+        
+        if(reportedLevel != currentLevel)
+        {
+            sendEvent(name: "level", value: reportedLevel)
+            logDebug("new level: ${reportedLevel}")
+        }
     }
 }
 
