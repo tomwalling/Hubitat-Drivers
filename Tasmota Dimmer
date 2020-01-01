@@ -16,7 +16,7 @@
  *
  */
 metadata {
-    definition (name: "Sonoff Basic - Tasmota Dimmer", namespace: "mhutchy", author: "Mark Hutchings")
+    definition (name: "Tasmota Dimmer", namespace: "mhutchy", author: "Mark Hutchings")
     {
         capability "Momentary"
         capability "Switch"
@@ -44,7 +44,6 @@ metadata {
         section ("Device preferences")
         {
             input "forceIP", "string", title: "IP Address (optional)", description: "If left blank then device network iD will be used as IP", multiple: false, required: false
-            input "stopBlink",  "bool", title: "Disable LED blink when Sonoff WiFi low", displayDuringSetup: true, required: false
             input "disabled", "bool", title: "Disable driver", description: "If this is set, the driver will neither update switch statuses or send commands to the device (used to avoid errors if device is disconnected)", displayDuringSetup: true, required: false
             
             input "logDebugging", "bool", title: "Enable debug logging", displayDuringSetup: true, required: true
@@ -87,11 +86,6 @@ def initialise()
     if(password)
     {
         action ("WebPassword%20$password")
-    }
-    
-    if(stopBlink)
-    {
-        action ("setoption31%20On")
     }
     
     // The Sonoff doesn't send parse information, so we need to ask for updates every minute.
@@ -251,9 +245,6 @@ void calledBackHandler(hubitat.device.HubResponse hubResponse)
             break;
         case """{"POWER1":"OFF"}""":
             reportedState = "off"
-            break;
-        case """{"SetOption31":"ON"}""":
-            logDebug("$device.displayName - disabled LED blink on WiFi error")
             break;
         default:
             break;
